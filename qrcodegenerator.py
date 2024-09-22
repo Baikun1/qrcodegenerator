@@ -1,47 +1,46 @@
-import tkinter as tk
-from tkinter import messagebox, filedialog
+import sys
 import pyqrcode
 import png
 
-class QRCodeGeneratorApp:
-    def __init__(self, root):
-        self.root = root
-        self.root.title("QR Code Generator")
+def generate_qr_code(data):
+    if not data:
+        print("Error: Please provide a valid URL or string.")
+        return None
 
-        self.url_label = tk.Label(root, text="Enter URL or String:")
-        self.url_label.grid(row=0, column=0)
-        self.url_entry = tk.Entry(root, width=40)
-        self.url_entry.grid(row=0, column=1)
+    try:
+        qr_code = pyqrcode.create(data)
+        qr_code.show()
+        return qr_code
+    except Exception as e:
+        print(f"Error generating QR code: {e}")
+        return None
 
-        self.generate_button = tk.Button(root, text="Generate QR Code", command=self.generate_qr_code)
-        self.generate_button.grid(row=1, column=0, columnspan=2)
+def save_qr_code(qr_code, file_path):
+    if not qr_code:
+        print("Error: No QR code to save.")
+        return
 
-        self.save_button = tk.Button(root, text="Save QR Code", command=self.save_qr_code, state=tk.DISABLED)
-        self.save_button.grid(row=2, column=0, columnspan=2)
-
-        self.qr_code = None
-
-    def generate_qr_code(self):
-        url = self.url_entry.get()
-        if not url:
-            messagebox.showerror("Error", "Please enter a valid URL or string.")
-            return
-
-        self.qr_code = pyqrcode.create(url)
-        self.qr_code.show()
-        self.save_button.config(state=tk.NORMAL)
-
-    def save_qr_code(self):
-        if not self.qr_code:
-            messagebox.showerror("Error", "No QR code to save.")
-            return
-
-        file_path = filedialog.asksaveasfilename(defaultextension=".png",filetypes=[("PNG files", "*.png")])
-        if file_path:
-            self.qr_code.png(file_path, scale=8)
-            messagebox.showinfo("Success", f"QR code saved as {file_path}")
+    try:
+        qr_code.png(file_path, scale=8)
+        print(f"Success: QR code saved as {file_path}")
+    except Exception as e:
+        print(f"Error saving QR code: {e}")
 
 if __name__ == "__main__":
-    root = tk.Tk()
-    app = QRCodeGeneratorApp(root)
-    root.mainloop()
+    # Check for command line arguments
+    if len(sys.argv) > 1:
+        url = sys.argv[1]
+    else:
+        # Take input from the user
+        url = input("Enter URL or string to generate QR code: ")
+
+    qr_code = generate_qr_code(url)
+
+    # Prompt to save the QR code
+    if qr_code:
+        save_option = input("Do you want to save the QR code? (yes/no): ").lower()
+        if save_option == 'yes':
+            file_path = input("Enter the full path to save the QR code (with .png extension): ")
+            save_qr_code(qr_code, file_path)
+        else:
+            print("QR code was not saved.")
